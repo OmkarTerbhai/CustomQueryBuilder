@@ -13,7 +13,7 @@ public class App
                 .select("name", "age")
                 .from("Employees")
                 .orderBy("age")
-                .innerJoin("Department")
+                .leftJoin("Department")
                 .on("name")
                 .build();
 
