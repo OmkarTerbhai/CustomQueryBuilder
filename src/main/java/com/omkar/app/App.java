@@ -11,10 +11,6 @@ public class App
         QueryBuilder q = QueryBuilder.getBuilder()
                 .where("salary < 40000")
                 .select("name", "age")
-                .from("Employees")
-                .orderBy("age")
-                .leftJoin("Department")
-                .on("name")
                 .build();
 
 

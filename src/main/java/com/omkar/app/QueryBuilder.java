@@ -12,8 +12,10 @@ public class QueryBuilder {
     StringBuilder query = new StringBuilder();
 
     private QueryBuilder(StringBuilder select, StringBuilder where, StringBuilder from, StringBuilder orderBy,
-                            StringBuilder innerJoinClause, StringBuilder leftJoinClause, StringBuilder onClause) {
+                            StringBuilder innerJoinClause, StringBuilder leftJoinClause, StringBuilder onClause,
+                            StringBuilder limitClause) throws Exception {
         StringBuilder joinClause = new StringBuilder();
+        validateClausesStrings( select,  where,  from,  orderBy,innerJoinClause, leftJoinClause, onClause, limitClause);
         if(innerJoinClause.length() <= CommonAppUtils.INNER_JOIN_INITIAL_SIZE &&
                 leftJoinClause.length() >= CommonAppUtils.LEFT_JOIN_INITIAL_SIZE) {
             joinClause = leftJoinClause;
@@ -31,7 +33,21 @@ public class QueryBuilder {
                 .append(joinClause)
                 .append(onClause)
                 .append(orderBy)
+                .append(limitClause)
                 .append(";");
+    }
+
+    public void validateClausesStrings(StringBuilder select, StringBuilder where, StringBuilder from, StringBuilder orderBy,
+                                       StringBuilder innerJoinClause, StringBuilder leftJoinClause, StringBuilder onClause,
+                                       StringBuilder limitClause) throws Exception {
+
+        if(StringUtils.isBlank(select)) {
+            throw new Exception("Query Must have a SELECT statement");
+        }
+        if(StringUtils.isBlank(from)) {
+            throw new Exception("Please specify table to fetch data from");
+        }
+
     }
 
     public static Builder getBuilder() {
@@ -44,18 +60,19 @@ public class QueryBuilder {
 
     static class Builder {
         StringBuilder query = new StringBuilder();
-        public  final StringBuilder SELECT_CLAUSE = new StringBuilder("SELECT ");
-        public  final StringBuilder WHERE_CLAUSE = new StringBuilder(" WHERE ");
-        public  final StringBuilder FROM_CLAUSE = new StringBuilder(" FROM ");
-        public  final StringBuilder ORDER_BY_CLAUSE = new StringBuilder(" ORDER BY ");
-        public  final StringBuilder INNER_JOIN_CLAUSE = new StringBuilder(" INNER JOIN ");
-
-        public final StringBuilder LEFT_JOIN_CLAUSE = new StringBuilder(" LEFT JOIN ");
-        public final StringBuilder ON_CLAUSE = new StringBuilder(" ON ");
+        public  final StringBuilder SELECT_CLAUSE = new StringBuilder();
+        public  final StringBuilder WHERE_CLAUSE = new StringBuilder();
+        public  final StringBuilder FROM_CLAUSE = new StringBuilder();
+        public  final StringBuilder ORDER_BY_CLAUSE = new StringBuilder();
+        public  final StringBuilder INNER_JOIN_CLAUSE = new StringBuilder();
+        public final StringBuilder LEFT_JOIN_CLAUSE = new StringBuilder();
+        public final StringBuilder ON_CLAUSE = new StringBuilder();
+        public final StringBuilder LIMIT_CLAUSE = new StringBuilder();
 
         public Builder() {}
 
         public Builder select(String... attributes) {
+            SELECT_CLAUSE.append(CommonAppUtils.SELECT_STATEMENT);
             if(Objects.nonNull(attributes)) {
                 SELECT_CLAUSE.append(attributes[0]);
                 for(int i = 1; i < attributes.length; i++) {
@@ -77,7 +94,7 @@ public class QueryBuilder {
             if(StringUtils.isBlank(tableName)) {
                 throw new Exception("Table Name is required to fetch data from SQL database");
             }
-            FROM_CLAUSE.append(tableName);
+            FROM_CLAUSE.append(CommonAppUtils.FROM_STATEMENT + tableName);
 
             return this;
         }
@@ -88,7 +105,7 @@ public class QueryBuilder {
          */
         public Builder where(String condition) {
             if(StringUtils.isNotBlank(condition)) {
-                WHERE_CLAUSE.append(condition);
+                WHERE_CLAUSE.append(CommonAppUtils.WHERE_STATEMENT + condition);
             }
             return this;
         }
@@ -100,6 +117,7 @@ public class QueryBuilder {
          */
         public Builder orderBy(String... colNames) throws Exception {
             if(Objects.nonNull(colNames)) {
+                ORDER_BY_CLAUSE.append(CommonAppUtils.ORDER_BY_STATEMENT);
                 for(String s : colNames) {
                     if(SELECT_CLAUSE.indexOf(s) == -1) {
                         throw new Exception("Column for order by must  be present in select clause");
@@ -118,14 +136,14 @@ public class QueryBuilder {
          */
         public Builder innerJoin(String joinTable) {
             if(Objects.nonNull(joinTable)) {
-                INNER_JOIN_CLAUSE.append(joinTable);
+                INNER_JOIN_CLAUSE.append(CommonAppUtils.INNER_JOIN_STATEMENT + joinTable);
             }
             return this;
         }
 
         public Builder leftJoin(String joinTable) {
             if(Objects.nonNull(joinTable)) {
-                LEFT_JOIN_CLAUSE.append(joinTable);
+                LEFT_JOIN_CLAUSE.append(CommonAppUtils.LEFT_JOIN_STATEMENT + joinTable);
             }
             return this;
         }
@@ -135,26 +153,33 @@ public class QueryBuilder {
          * @return
          */
         public Builder on(String... colNames) {
-            for(String s : colNames) {
-                ON_CLAUSE.append(FROM_CLAUSE.substring(5, FROM_CLAUSE.length()) + "." + s);
-                String[] joinSplit = null;
-                if(INNER_JOIN_CLAUSE.length() <= CommonAppUtils.INNER_JOIN_INITIAL_SIZE &&
-                        LEFT_JOIN_CLAUSE.length() >= CommonAppUtils.LEFT_JOIN_INITIAL_SIZE) {
-                    joinSplit = LEFT_JOIN_CLAUSE.toString().split(" ");
-                    ON_CLAUSE.append(" = " + joinSplit[joinSplit.length-1] + "." + s);
-                }
-                else if(INNER_JOIN_CLAUSE.length() >= CommonAppUtils.INNER_JOIN_INITIAL_SIZE &&
-                        LEFT_JOIN_CLAUSE.length() <= CommonAppUtils.LEFT_JOIN_INITIAL_SIZE) {
-                    joinSplit = INNER_JOIN_CLAUSE.toString().split(" ");
-                    ON_CLAUSE.append(" = " + joinSplit[joinSplit.length-1] + "." + s);
+            if(Objects.nonNull(colNames)) {
+                ON_CLAUSE.append(CommonAppUtils.ON_STATEMENT);
+                for (String s : colNames) {
+                    ON_CLAUSE.append(FROM_CLAUSE.substring(5, FROM_CLAUSE.length()) + "." + s);
+                    String[] joinSplit = null;
+                    if (INNER_JOIN_CLAUSE.length() <= CommonAppUtils.INNER_JOIN_INITIAL_SIZE &&
+                            LEFT_JOIN_CLAUSE.length() >= CommonAppUtils.LEFT_JOIN_INITIAL_SIZE) {
+                        joinSplit = LEFT_JOIN_CLAUSE.toString().split(" ");
+                        ON_CLAUSE.append(" = " + joinSplit[joinSplit.length - 1] + "." + s);
+                    } else if (INNER_JOIN_CLAUSE.length() >= CommonAppUtils.INNER_JOIN_INITIAL_SIZE &&
+                            LEFT_JOIN_CLAUSE.length() <= CommonAppUtils.LEFT_JOIN_INITIAL_SIZE) {
+                        joinSplit = INNER_JOIN_CLAUSE.toString().split(" ");
+                        ON_CLAUSE.append(" = " + joinSplit[joinSplit.length - 1] + "." + s);
+                    }
                 }
             }
             return this;
         }
 
-        public QueryBuilder build() {
+        public Builder limit(int limit) {
+            LIMIT_CLAUSE.append(CommonAppUtils.LIMIT_STATEMENT + limit);
+            return this;
+        }
+
+        public QueryBuilder build() throws Exception {
             return new QueryBuilder(SELECT_CLAUSE, WHERE_CLAUSE, FROM_CLAUSE, ORDER_BY_CLAUSE,
-                    INNER_JOIN_CLAUSE, LEFT_JOIN_CLAUSE, ON_CLAUSE);
+                    INNER_JOIN_CLAUSE, LEFT_JOIN_CLAUSE, ON_CLAUSE, LIMIT_CLAUSE);
         }
     }
 }
