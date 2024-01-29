@@ -59,14 +59,14 @@ public class QueryBuilder {
 
     static class Builder {
         StringBuilder query = new StringBuilder();
-        public  final StringBuilder SELECT_CLAUSE = new StringBuilder();
-        public  final StringBuilder WHERE_CLAUSE = new StringBuilder();
-        public  final StringBuilder FROM_CLAUSE = new StringBuilder();
-        public  final StringBuilder ORDER_BY_CLAUSE = new StringBuilder();
-        public  final StringBuilder INNER_JOIN_CLAUSE = new StringBuilder();
-        public final StringBuilder LEFT_JOIN_CLAUSE = new StringBuilder();
-        public final StringBuilder ON_CLAUSE = new StringBuilder();
-        public final StringBuilder LIMIT_CLAUSE = new StringBuilder();
+        private  final StringBuilder SELECT_CLAUSE = new StringBuilder();
+        private  final StringBuilder WHERE_CLAUSE = new StringBuilder();
+        private  final StringBuilder FROM_CLAUSE = new StringBuilder();
+        private  final StringBuilder ORDER_BY_CLAUSE = new StringBuilder();
+        private  final StringBuilder INNER_JOIN_CLAUSE = new StringBuilder();
+        private final StringBuilder LEFT_JOIN_CLAUSE = new StringBuilder();
+        private final StringBuilder ON_CLAUSE = new StringBuilder();
+        private final StringBuilder LIMIT_CLAUSE = new StringBuilder();
 
         public Builder() {}
 
