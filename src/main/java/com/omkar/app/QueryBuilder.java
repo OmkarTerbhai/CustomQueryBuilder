@@ -11,29 +11,28 @@ import java.util.Objects;
 public class QueryBuilder {
     StringBuilder query = new StringBuilder();
 
-    private QueryBuilder(StringBuilder select, StringBuilder where, StringBuilder from, StringBuilder orderBy,
-                            StringBuilder innerJoinClause, StringBuilder leftJoinClause, StringBuilder onClause,
-                            StringBuilder limitClause) throws Exception {
+    private QueryBuilder(Builder builder) throws Exception {
         StringBuilder joinClause = new StringBuilder();
-        validateClausesStrings( select,  where,  from,  orderBy,innerJoinClause, leftJoinClause, onClause, limitClause);
-        if(innerJoinClause.length() <= CommonAppUtils.INNER_JOIN_INITIAL_SIZE &&
-                leftJoinClause.length() >= CommonAppUtils.LEFT_JOIN_INITIAL_SIZE) {
-            joinClause = leftJoinClause;
+        validateClausesStrings( builder.getSelectClause(),  builder.getWhereClause(),  builder.getFromClause(),  builder.getOrderByClause(),
+                builder.getInnerJoinClause(), builder.getLeftJoinClause(), builder.getOnClause(), builder.getLimitClause());
+        if(builder.getInnerJoinClause().length() <= CommonAppUtils.INNER_JOIN_INITIAL_SIZE &&
+                builder.LEFT_JOIN_CLAUSE.length() >= CommonAppUtils.LEFT_JOIN_INITIAL_SIZE) {
+            joinClause = builder.getLeftJoinClause();
         }
-        else if(innerJoinClause.length() >= CommonAppUtils.INNER_JOIN_INITIAL_SIZE &&
-                leftJoinClause.length() <= CommonAppUtils.LEFT_JOIN_INITIAL_SIZE) {
-            joinClause = innerJoinClause;
+        else if(builder.getInnerJoinClause().length() >= CommonAppUtils.INNER_JOIN_INITIAL_SIZE &&
+                builder.LEFT_JOIN_CLAUSE.length() <= CommonAppUtils.LEFT_JOIN_INITIAL_SIZE) {
+            joinClause = builder.getInnerJoinClause();
         }
         else {
-            joinClause.append(innerJoinClause).append(leftJoinClause);
+            joinClause.append(builder.getInnerJoinClause()).append(builder.getLeftJoinClause());
         }
-        query.append(select)
-                .append(from)
-                .append(where)
+        query.append(builder.SELECT_CLAUSE)
+                .append(builder.FROM_CLAUSE)
+                .append(builder.WHERE_CLAUSE)
                 .append(joinClause)
-                .append(onClause)
-                .append(orderBy)
-                .append(limitClause)
+                .append(builder.ON_CLAUSE)
+                .append(builder.getOrderByClause())
+                .append(builder.getLimitClause())
                 .append(";");
     }
 
@@ -177,9 +176,38 @@ public class QueryBuilder {
             return this;
         }
 
+        public StringBuilder getSelectClause() {
+            return this.SELECT_CLAUSE;
+        }
+        public StringBuilder getWhereClause() {
+            return this.WHERE_CLAUSE;
+        }
+        public StringBuilder getFromClause() {
+            return this.FROM_CLAUSE;
+        }
+
+        public StringBuilder getInnerJoinClause() {
+            return this.INNER_JOIN_CLAUSE;
+        }
+
+        public StringBuilder getLeftJoinClause() {
+            return this.LEFT_JOIN_CLAUSE;
+        }
+
+        public StringBuilder getOnClause() {
+            return this.ON_CLAUSE;
+        }
+
+        public StringBuilder getOrderByClause() {
+            return this.ORDER_BY_CLAUSE;
+        }
+
+        public StringBuilder getLimitClause() {
+            return this.LIMIT_CLAUSE;
+        }
+
         public QueryBuilder build() throws Exception {
-            return new QueryBuilder(SELECT_CLAUSE, WHERE_CLAUSE, FROM_CLAUSE, ORDER_BY_CLAUSE,
-                    INNER_JOIN_CLAUSE, LEFT_JOIN_CLAUSE, ON_CLAUSE, LIMIT_CLAUSE);
+            return new QueryBuilder(this);
         }
     }
 }

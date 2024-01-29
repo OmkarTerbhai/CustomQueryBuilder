@@ -11,6 +11,7 @@ public class App
         QueryBuilder q = QueryBuilder.getBuilder()
                 .where("salary < 40000")
                 .select("name", "age")
+                .from("MyTable")
                 .build();
 
 
