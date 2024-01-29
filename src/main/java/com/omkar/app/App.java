@@ -12,6 +12,10 @@ public class App
                 .where("salary < 40000")
                 .select("name", "age")
                 .from("MyTable")
+                .orderBy("age")
+                .leftJoin("Department")
+                .on("deptId")
+                .limit(3)
                 .build();
 
 
